@@ -1,0 +1,28 @@
+{
+  "name": "cert-backend",
+  "version": "1.0.0",
+  "description": "Backend con TLS cliente y puertos rotativos",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.ts",
+    "build": "tsc",
+    "start": "ts-node src/multi-start.ts && node dist/server.js",
+    "multi-dev": "ts-node src/start-multi.ts",
+    "multi-prod": "pnpm build && node dist/start-multi.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.13.5",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}
