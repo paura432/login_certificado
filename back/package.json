@@ -6,15 +6,16 @@
   "scripts": {
     "dev": "nodemon src/server.ts",
     "build": "tsc",
-    "start": "ts-node src/multi-start.ts && node dist/server.js",
-    "multi-dev": "ts-node src/start-multi.ts",
-    "multi-prod": "pnpm build && node dist/start-multi.js"
+    "start": "pnpm run multi-prod",
+    "multi-dev": "ts-node src/multi-start.ts",
+    "multi-prod": "pnpm build && node dist/multi-start.js"
   },
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
     "express": "^4.21.2"
   },
   "devDependencies": {

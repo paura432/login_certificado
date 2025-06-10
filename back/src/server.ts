@@ -4,6 +4,9 @@ import https from 'https';
 import path from 'path';
 import express from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 app.use(cors());
@@ -40,10 +43,11 @@ app.get('/login', (req, res) => {
   req.socket.destroy();
 });
 
+const certPath = process.env.CERT_PATH || path.resolve(__dirname, '../../certs');
 
 const options = {
-  key: fs.readFileSync(path.join(__dirname, '../../certs/localhost-key.pem')),
-  cert: fs.readFileSync(path.join(__dirname, '../../certs/localhost.pem')),
+  key: fs.readFileSync(`${certPath}/localhost-key.pem`),
+  cert: fs.readFileSync(`${certPath}/localhost.pem`),
   requestCert: true,
   rejectUnauthorized: false,
 };

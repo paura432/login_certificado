@@ -1,0 +1,24 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: front/Dockerfile
+    image: demos/login-cert/back
+    ports:
+      - "4430-4449:4430-4449"
+    volumes:
+      - ./certs:/app/certs:ro
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+
+  frontend:
+    build:
+      context: .
+      dockerfile: back/Dockerfile
+    image: demos/login-cert/front
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
