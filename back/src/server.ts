@@ -1,8 +1,7 @@
-// backend/server.ts
 import fs from 'fs';
 import https from 'https';
 import path from 'path';
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
@@ -12,7 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get('/login', (req, res) => {
+app.get('/login', (req: Request, res: Response) => {
   res.setHeader('Cache-Control', 'no-store');
 
   const cert = (req.socket as any).getPeerCertificate(true);
@@ -21,29 +20,45 @@ app.get('/login', (req, res) => {
     return res.status(401).json({ error: 'Certificado requerido o inválido.' });
   }
 
-  const { subject = {}, issuerCertificate, issuer, raw, pubkey, ...rest } = cert;
+  const subject = cert.subject || {};
+  const issuer = cert.issuer || {};
 
-  const subjectFields = Object.entries(subject).map(([k, v]) => [k.toUpperCase(), v]);
+  const mappedSubject = {
+    "Common Name (CN)": subject.CN,
+    "Organization (O)": subject.O,
+    "Organizational Unit (OU)": subject.OU,
+    "Country (C)": subject.C,
+    "Locality (L)": subject.L,
+    "State/Province (ST)": subject.ST,
+    "Email Address": subject.emailAddress,
+  };
 
-  const otherFields = Object.entries(rest).filter(
-    ([key, val]) =>
-      key !== 'issuer' &&
-      key !== 'issuerCertificate' &&
-      key !== 'raw' &&
-      key !== 'pubkey' &&
-      typeof val !== 'function'
-  );
+  const mappedIssuer = {
+    "Issuer Common Name (CN)": issuer.CN,
+    "Issuer Organization (O)": issuer.O,
+    "Issuer Organizational Unit (OU)": issuer.OU,
+    "Issuer Country (C)": issuer.C,
+    "Issuer Locality (L)": issuer.L,
+    "Issuer State/Province (ST)": issuer.ST,
+  };
 
-  const safeCert = Object.fromEntries([
-    ...subjectFields,
+  const otherFields = {
+    "Valid From": cert.valid_from,
+    "Valid To": cert.valid_to,
+    "Serial Number": cert.serialNumber,
+  };
+
+  const safeCert = {
+    ...mappedSubject,
+    ...mappedIssuer,
     ...otherFields,
-  ]);
+  };
 
   res.json(safeCert);
   req.socket.destroy();
 });
 
-const certPath = process.env.CERT_PATH || path.resolve(__dirname, '../../certs');
+const certPath = process.env.CERT_PATH || path.resolve(__dirname, '../certs');
 
 const options = {
   key: fs.readFileSync(`${certPath}/localhost-key.pem`),

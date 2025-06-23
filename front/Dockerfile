@@ -9,4 +9,6 @@ ENV CI=true
 RUN  npm install -g pnpm && \
     pnpm install
 
+EXPOSE 3050
+
 CMD ["pnpm", "run", "dev"]
