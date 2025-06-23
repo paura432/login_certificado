@@ -135,7 +135,7 @@ export default function Home() {
   };
 
   const renderCert = (c: CertificateData) => {
-    const rows = Object.entries(c).filter(([k,v]) => typeof v !== 'function');
+    const rows = Object.entries(c).filter(([,v]) => typeof v !== 'function');
     const pad = Math.max(...rows.map(([k]) => k.length)) + 2;
 
     return (
