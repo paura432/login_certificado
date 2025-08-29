@@ -1,74 +1,71 @@
-import fs from 'fs';
-import https from 'https';
-import path from 'path';
-import express, { Request, Response } from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+import express from "express";
+import cors from "cors";
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
 app.use(express.json());
 
-app.get('/login', (req: Request, res: Response) => {
-  res.setHeader('Cache-Control', 'no-store');
+const h = (req: express.Request, name: string) =>
+  (req.headers[name.toLowerCase()] as string | undefined) || "";
 
-  const cert = (req.socket as any).getPeerCertificate(true);
+function parseDN(dn: string) {
+  return dn
+    .split("/")
+    .filter(Boolean)
+    .reduce<Record<string, string>>((acc, kv) => {
+      const [k, ...rest] = kv.split("=");
+      acc[k] = rest.join("=");
+      return acc;
+    }, {});
+}
 
-  if (!cert || Object.keys(cert).length === 0) {
-    return res.status(401).json({ error: 'Certificado requerido o inválido.' });
-  }
-
-  const subject = cert.subject || {};
-  const issuer = cert.issuer || {};
-
-  const mappedSubject = {
-    "Common Name (CN)": subject.CN,
-    "Organization (O)": subject.O,
-    "Organizational Unit (OU)": subject.OU,
-    "Country (C)": subject.C,
-    "Locality (L)": subject.L,
-    "State/Province (ST)": subject.ST,
-    "Email Address": subject.emailAddress,
-  };
-
-  const mappedIssuer = {
-    "Issuer Common Name (CN)": issuer.CN,
-    "Issuer Organization (O)": issuer.O,
-    "Issuer Organizational Unit (OU)": issuer.OU,
-    "Issuer Country (C)": issuer.C,
-    "Issuer Locality (L)": issuer.L,
-    "Issuer State/Province (ST)": issuer.ST,
-  };
-
-  const otherFields = {
-    "Valid From": cert.valid_from,
-    "Valid To": cert.valid_to,
-    "Serial Number": cert.serialNumber,
-  };
-
-  const safeCert = {
-    ...mappedSubject,
-    ...mappedIssuer,
-    ...otherFields,
-  };
-
-  res.json(safeCert);
-  req.socket.destroy();
+app.post("/api/handshake", (req, res) => {
+  console.log("[handshake] headers:", req.headers);
+  res.status(204).end();
 });
 
-const certPath = process.env.CERT_PATH || path.resolve(__dirname, '../certs');
+app.get("/api/certinfo", (req, res) => {
+  console.log("[certinfo] headers:", req.headers);
 
-const options = {
-  key: fs.readFileSync(`${certPath}/localhost-key.pem`),
-  cert: fs.readFileSync(`${certPath}/localhost.pem`),
-  requestCert: true,
-  rejectUnauthorized: false,
-};
+  const verify = h(req, "x-ssl-client-verify");
+  const serial = h(req, "x-ssl-client-serial");
+  const sDN = h(req, "x-ssl-client-s-dn");
+  const iDN = h(req, "x-ssl-client-i-dn");
+  const notBefore = h(req, "x-ssl-client-notbefore");
+  const notAfter = h(req, "x-ssl-client-notafter");
+  const certPEM = h(req, "x-ssl-client-cert");
+  const protocol = h(req, "x-ssl-protocol");
+  const cipher = h(req, "x-ssl-cipher");
 
-const PORT = parseInt(process.env.PORT || '4430', 10);
+  const subject = parseDN(sDN);
+  const issuer = parseDN(iDN);
 
-https.createServer(options, app).listen(PORT, () => {
-  console.log(`✅ Backend TLS corriendo en https://localhost:${PORT}`);
+  res.json({
+    ok: true,
+    verify: verify || "NONE",
+    subject: {
+      CN: subject.CN || "",
+      O: subject.O || "",
+      OU: subject.OU || "",
+      raw: sDN,
+    },
+    issuer: {
+      CN: issuer.CN || "",
+      O: issuer.O || "",
+      OU: issuer.OU || "",
+      raw: iDN,
+    },
+    serial,
+    notBefore,
+    notAfter,
+    tls: { protocol, cipher },
+    certPEM,
+  });
+});
+
+app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
+
+const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
+app.listen(PORT, () => {
+  console.log(`[back] escuchando en http://localhost:${PORT}`);
 });

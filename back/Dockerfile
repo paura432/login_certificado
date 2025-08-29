@@ -1,16 +1,14 @@
-FROM node:22
+FROM node:20-alpine
 
-WORKDIR /tmp/demos/login-cert/back
+WORKDIR /app
+RUN npm install -g pnpm
+
+COPY package*.json ./
+COPY pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
 
 COPY . .
-
-ENV CI=true
-
-RUN  npm install -g pnpm && \
-    pnpm install
-
 RUN pnpm run build
 
-EXPOSE 4430 4431 4432
-
-CMD ["pnpm", "start"]
+EXPOSE 4000
+CMD ["node", "dist/server.js"]

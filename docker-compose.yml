@@ -1,24 +1,21 @@
 services:
   backend:
-    build:
-      context: .
-      dockerfile: front/Dockerfile
-    image: demos/login-cert/back
-    ports:
-      - "4430-4432:4430-4432"
-    volumes:
-      - ./certs:/app/certs:ro
-    env_file:
-      - .env
-    environment:
-      NODE_ENV: production
+    build: ./back
+    container_name: login-cert-back
+    expose:
+      - "4000"
 
   frontend:
-    build:
-      context: .
-      dockerfile: back/Dockerfile
-    image: demos/login-cert/front
+    build: ./front
+    container_name: login-cert-front
+    expose:
+      - "3000"
+
+  nginx:
+    build: ./nginx
+    container_name: login-cert-nginx
     ports:
-      - "3050:3050"
-    environment:
-      NODE_ENV: production
+      - "443:443"
+    depends_on:
+      - backend
+      - frontend
