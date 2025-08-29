@@ -1,0 +1,21 @@
+services:
+  backend:
+    build: ./back
+    container_name: login-cert-back
+    expose:
+      - "4000"
+
+  frontend:
+    build: ./front
+    container_name: login-cert-front
+    expose:
+      - "3000"
+
+  nginx:
+    build: ./nginx
+    container_name: login-cert-nginx
+    ports:
+      - "443:443"
+    depends_on:
+      - backend
+      - frontend
