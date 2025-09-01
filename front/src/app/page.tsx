@@ -4,8 +4,8 @@ import { useState } from 'react';
 type CertInfo = {
   ok: boolean;
   verify: string;
-  subject: Record<string, string>;
-  issuer: Record<string, string>;
+  subject: { CN: string; O: string; OU: string; raw: string };
+  issuer: { CN: string; O: string; OU: string; raw: string };
   serial: string;
   notBefore: string;
   notAfter: string;
@@ -13,16 +13,33 @@ type CertInfo = {
 };
 
 const fieldLabels: Record<string, string> = {
-  CN: "Nombre común (CN)",
-  O: "Organización (O)",
-  OU: "Unidad organizativa (OU)",
-  C: "País (C)",
-  ST: "Estado / Provincia (ST)",
-  L: "Localidad (L)",
-  emailAddress: "Correo electrónico",
-  serialNumber: "Número de serie",
-  title: "Título",
+  CN: 'Nombre común (CN)',
+  O: 'Organización (O)',
+  OU: 'Unidad organizativa (OU)',
+  C: 'País (C)',
+  L: 'Localidad (L)',
+  ST: 'Provincia/Estado (ST)',
+  EMAIL: 'Correo electrónico',
 };
+
+function formatDN(raw: string): JSX.Element {
+  if (!raw) return <span>—</span>;
+  const parts = raw.split(',');
+  return (
+    <dl className="ml-4">
+      {parts.map((p, i) => {
+        const [k, v] = p.split('=');
+        const label = fieldLabels[k?.trim()] || k?.trim();
+        return (
+          <div key={i} className="flex">
+            <dt className="w-48 font-medium text-gray-700">{label}:</dt>
+            <dd className="text-gray-900">{v?.trim()}</dd>
+          </div>
+        );
+      })}
+    </dl>
+  );
+}
 
 export default function Home() {
   const [info, setInfo] = useState<CertInfo | null>(null);
@@ -47,7 +64,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-start p-10 bg-gray-50">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Login con Certificado Digital</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">
+        Login con Certificado Digital
+      </h1>
 
       <button
         onClick={doHandshake}
@@ -60,41 +79,25 @@ export default function Home() {
       {error && <p className="text-red-500 mt-4">{error}</p>}
 
       {info && (
-        <div className="w-full max-w-xl bg-white shadow-lg rounded-xl p-6 border border-gray-200">
+        <div className="w-full max-w-2xl bg-white shadow-lg rounded-xl p-6 border border-gray-200">
           <h3 className="text-lg font-bold mb-4 text-blue-700">
             ✅ Este es tu certificado
           </h3>
 
-          <dl className="space-y-3 text-sm">
+          <div className="space-y-4 text-sm">
             <div>
-              <dt className="font-semibold text-gray-600">Resultado de verificación:</dt>
+              <dt className="font-semibold text-gray-600">Verificación:</dt>
               <dd>{info.verify}</dd>
             </div>
 
             <div>
               <dt className="font-semibold text-gray-600">Datos del sujeto:</dt>
-              <dd className="ml-3 space-y-1">
-                {Object.entries(info.subject).map(([k, v]) =>
-                  v ? (
-                    <p key={k}>
-                      <span className="font-medium">{fieldLabels[k] || k}:</span> {v}
-                    </p>
-                  ) : null
-                )}
-              </dd>
+              <dd>{formatDN(info.subject.raw)}</dd>
             </div>
 
             <div>
               <dt className="font-semibold text-gray-600">Datos del emisor:</dt>
-              <dd className="ml-3 space-y-1">
-                {Object.entries(info.issuer).map(([k, v]) =>
-                  v ? (
-                    <p key={k}>
-                      <span className="font-medium">{fieldLabels[k] || k}:</span> {v}
-                    </p>
-                  ) : null
-                )}
-              </dd>
+              <dd>{formatDN(info.issuer.raw)}</dd>
             </div>
 
             <div>
@@ -115,7 +118,7 @@ export default function Home() {
                 {info.tls.protocol} · {info.tls.cipher}
               </dd>
             </div>
-          </dl>
+          </div>
         </div>
       )}
     </main>
