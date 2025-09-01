@@ -60,30 +60,38 @@ export default function Home() {
               ✅ Tu certificado
             </h3>
 
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+            <dl className="space-y-3 text-sm">
               <div>
                 <dt className="font-semibold text-gray-600">✔ Verificación</dt>
                 <dd className="text-gray-800">{info.verify}</dd>
               </div>
 
+              {/* --- Subject completo --- */}
               <div>
-                <dt className="font-semibold text-gray-600">📌 CN</dt>
-                <dd>{info.subject.CN || '—'}</dd>
+                <dt className="font-semibold text-gray-600">👤 Sujeto (Subject)</dt>
+                <dd className="ml-2 space-y-1">
+                  {Object.entries(info.subject).map(([k, v]) =>
+                    v ? (
+                      <p key={k}>
+                        <span className="font-medium">{k}:</span> {v}
+                      </p>
+                    ) : null
+                  )}
+                </dd>
               </div>
 
+              {/* --- Issuer completo --- */}
               <div>
-                <dt className="font-semibold text-gray-600">🏢 Organización</dt>
-                <dd>{info.subject.O || '—'}</dd>
-              </div>
-
-              <div>
-                <dt className="font-semibold text-gray-600">📂 Unidad</dt>
-                <dd>{info.subject.OU || '—'}</dd>
-              </div>
-
-              <div className="sm:col-span-2">
-                <dt className="font-semibold text-gray-600">🔑 Emisor</dt>
-                <dd>{info.issuer.CN || info.issuer.raw || '—'}</dd>
+                <dt className="font-semibold text-gray-600">🏛️ Emisor (Issuer)</dt>
+                <dd className="ml-2 space-y-1">
+                  {Object.entries(info.issuer).map(([k, v]) =>
+                    v ? (
+                      <p key={k}>
+                        <span className="font-medium">{k}:</span> {v}
+                      </p>
+                    ) : null
+                  )}
+                </dd>
               </div>
 
               <div>
@@ -98,7 +106,7 @@ export default function Home() {
                 </dd>
               </div>
 
-              <div className="sm:col-span-2">
+              <div>
                 <dt className="font-semibold text-gray-600">🔒 Sesión TLS</dt>
                 <dd>
                   {info.tls.protocol} · {info.tls.cipher}
