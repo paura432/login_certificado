@@ -30,8 +30,7 @@ services:
       - "443:443"
       # - "80:80"  # (opcional, si vas a usar Let's Encrypt con HTTP-01)
     depends_on:
-      backend:
-        condition: service_healthy
-      frontend:
-        condition: service_healthy
+    depends_on:
+      - backend
+      - frontend
     restart: unless-stopped
