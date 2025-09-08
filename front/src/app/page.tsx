@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, type ReactElement } from 'react';
 
 type CertInfo = {
   ok: boolean;
@@ -22,18 +22,20 @@ const fieldLabels: Record<string, string> = {
   EMAIL: 'Correo electrónico',
 };
 
-function formatDN(raw: string): JSX.Element {
+function formatDN(raw?: string): ReactElement {
   if (!raw) return <span>—</span>;
-  const parts = raw.split(',');
+  const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
   return (
     <dl className="ml-4">
       {parts.map((p, i) => {
-        const [k, v] = p.split('=');
-        const label = fieldLabels[k?.trim()] || k?.trim();
+        const [kRaw, ...rest] = p.split('=');
+        const k = (kRaw || '').trim();
+        const v = rest.join('=').trim(); // por si el valor contiene '='
+        const label = fieldLabels[k] || k || 'Desconocido';
         return (
-          <div key={i} className="flex">
+          <div key={`${k}-${i}`} className="flex">
             <dt className="w-48 font-medium text-gray-700">{label}:</dt>
-            <dd className="text-gray-900">{v?.trim()}</dd>
+            <dd className="text-gray-900">{v || '—'}</dd>
           </div>
         );
       })}
@@ -92,12 +94,12 @@ export default function Home() {
 
             <div>
               <dt className="font-semibold text-gray-600">Datos del sujeto:</dt>
-              <dd>{formatDN(info.subject.raw)}</dd>
+              <dd>{formatDN(info.subject?.raw)}</dd>
             </div>
 
             <div>
               <dt className="font-semibold text-gray-600">Datos del emisor:</dt>
-              <dd>{formatDN(info.issuer.raw)}</dd>
+              <dd>{formatDN(info.issuer?.raw)}</dd>
             </div>
 
             <div>
@@ -115,7 +117,7 @@ export default function Home() {
             <div>
               <dt className="font-semibold text-gray-600">Sesión TLS:</dt>
               <dd>
-                {info.tls.protocol} · {info.tls.cipher}
+                {info.tls?.protocol} · {info.tls?.cipher}
               </dd>
             </div>
           </div>
