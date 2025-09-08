@@ -4,18 +4,34 @@ services:
     container_name: login-cert-back
     expose:
       - "4000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
 
   frontend:
     build: ./front
     container_name: login-cert-front
     expose:
       - "3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
 
   nginx:
     build: ./nginx
     container_name: login-cert-nginx
     ports:
       - "443:443"
+      # - "80:80"  # (opcional, si vas a usar Let's Encrypt con HTTP-01)
     depends_on:
-      - backend
-      - frontend
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    restart: unless-stopped
