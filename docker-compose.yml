@@ -29,7 +29,8 @@ services:
     ports:
       - "443:443"
     depends_on:
-    depends_on:
-      - backend
-      - frontend
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
     restart: unless-stopped
