@@ -2,31 +2,39 @@ services:
   backend:
     build: ./back
     container_name: login-cert-back
-    expose:
-      - "4000"
+    expose: ["4000"]
+    environment:
+      - PORT=4000
+      - NODE_ENV=production
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health || exit 1"]
+      # ← tu API correcta
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/api/health || exit 1"]
       interval: 10s
       timeout: 3s
-      retries: 5
+      retries: 10
+      start_period: 10s
     restart: unless-stopped
 
   frontend:
     build: ./front
     container_name: login-cert-front
-    expose:
-      - "3000"
+    expose: ["3000"]
+    environment:
+      - NODE_ENV=production
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/ || exit 1"]
+      # si usas basePath '/login_cert', comprueba eso
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/login_cert/ || exit 1"]
       interval: 10s
       timeout: 3s
-      retries: 5
+      retries: 10
+      start_period: 10s
     restart: unless-stopped
 
   nginx:
     build: ./nginx
     container_name: login-cert-nginx
     ports:
+      - "80:80"
       - "443:443"
     depends_on:
       backend:
