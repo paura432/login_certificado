@@ -2,7 +2,12 @@ import express from "express";
 import cors from "cors";
 
 const app = express();
-app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
+
+// Detrás de ALB/NGINX para que req.secure respete X-Forwarded-Proto
+app.set("trust proxy", 1);
+
+// Como front y back van por el mismo dominio, esto basta:
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 const h = (req: express.Request, name: string) =>
