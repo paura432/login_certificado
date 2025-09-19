@@ -19,7 +19,6 @@ services:
     expose:
       - "3000"
     healthcheck:
-      # Next a veces responde 308; --spider lo cuenta como OK
       test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/login_cert || exit 1"]
       interval: 10s
       timeout: 3s
@@ -30,8 +29,8 @@ services:
     build: ./nginx
     container_name: login-cert-nginx
     ports:
-      - "80:80"        # El ALB apunta aquí
-      # - "443:443"    # (Opcional si algún día terminas TLS en NGINX)
+      - "80:80"        # HTTP (redirige a HTTPS)
+      - "443:443"      # HTTPS con mTLS
     depends_on:
       backend:
         condition: service_healthy
@@ -39,5 +38,8 @@ services:
         condition: service_healthy
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./nginx/certs:/etc/nginx/certs:ro  # Certificados SSL
     restart: unless-stopped
+    environment:
+      # Para debug SSL (opcional)
+      - NGINX_SSL_DEBUG=1
